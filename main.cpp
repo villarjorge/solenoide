@@ -33,7 +33,7 @@ using len_t = usi::length<usi::millimetre>; // Tipo de longitud en milimetros
 using curr_t = usi::electric_current<usi::ampere>; // Tipo de corriente en Amperios
 using mag_ind_t = usi::magnetic_induction<usi::millitesla>; // Tipo de intensidad del campo magnético en militeslas
 using perm_t = usi::permeability<usi::henry_per_metre>; // Tipo de permeabilidad del vacío en Henry · metro^(-1)
-//using dimless_t = un::quantity<un::dim_one, un::one, float>;
+using dimless_t = un::quantity<un::dim_one, un::one, float>;
 
 struct Data {
     len_t position;
@@ -60,7 +60,7 @@ auto get_data(std::string path) -> stdx::generator<Data> {
 auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t {
     // Inducción magnética en un solenoide, z + z_0 es la distancia al centro del solenoide
     // Por ahora estas constantes no se corresponden a la realidad
-    //auto const N = dimless_t{100.0}; // número de espiras, adimensional
+    auto const N = dimless_t{100.0}; // número de espiras, adimensional
     auto const I = curr_t{1.0}; // Corriente que pasa por el solenoide en Amperios
     auto const L = len_t{70.0}; // Longitud del solenoide en milímetros
     auto const D = len_t{10.0}; // Diámetro del solenoide
@@ -72,8 +72,7 @@ auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t 
     auto const sqrt_one = un::sqrt(un::pow<2>(a) + un::pow<2>(R));
     auto const sqrt_two = un::sqrt(un::pow<2>(b) + un::pow<2>(R));
 
-    //return (mu_0/2)*(N*I/L)*(a/sqrt_one - b/sqrt_two);
-    return (mu_0/2)*(I/L)*(a/sqrt_one - b/sqrt_two);
+    return (mu_0/2)*(N*I/L)*(a/sqrt_one - b/sqrt_two);
 }
 
 auto main() -> int {
