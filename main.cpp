@@ -78,8 +78,49 @@ auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t 
 auto main() -> int {
     auto data_vec = get_data("../../magnetic_data_no_z_correction.csv") 
                     | stdx::ranges::to<std::vector<Data>>();
+    // Imprime los datos
+    //for (Data d : data_vec) {
+    //    stdx::println("position: {}, field: {}", d.position, d.magnetic_induction);
+    //}
+    
+    // dlib ---------------------------------------------------------------------
 
-    for (Data d : data_vec) {
-        stdx::println("position: {}, field: {}", d.position, d.magnetic_induction);
-    }
+    // tenemos dos parametros, por lo que necesitamos una matriz de 2 por 1
+    using parameter_t = dlib::matrix<double, 2, 1>; // Tipo de parámetro a optimizar (primer elemento es z_0 y segundo es mu_0)
+
+    // Función de cálculo de residuos (diferencia entre el campo teórico y el real)
+    auto residual = [](Data const& d, parameter_t const& param) -> double {
+        // Desglosa los datos 
+        auto const [pos, induc] = d;
+        // Desglosa el parámetro y envuelvelo en unidades
+        auto const z_0_param = len_t{param(0)};
+        auto const mu_0_param = perm_t{param(1)};
+
+        return (theoretic_magnetic_induction(pos, z_0_param, mu_0_param) - induc).number();
+    };
+    // Estimación inicial de los parámetros z_0 y mu_0
+    auto parameters_array_without_units = parameter_t{5.0, 1e-6};
+
+    // Ejecutamos el método LM con los datos experimentales, optimizando el valor de z_0 y mu_0. 
+    // El resultado obtenido multiplicado por 2 proporciona el RSS (suma de los residuos al cuadrado) medido implícitamente en Teslas^2:
+
+    auto rss_without_units = 2.0*dlib::solve_least_squares_lm(
+        dlib::objective_delta_stop_strategy{1.0e-7}, // precisión
+        residual,
+        dlib::derivative(residual), // aproximación numérica de la derivada del residuo 
+        data_vec, // todos los primeros argumentos que ir mandando a la función residual
+        parameters_array_without_units // objeto parámetro a optimizar
+    );
+
+    // dlib ---------------------------------------------------------------------
+
+    auto const z_0 = len_t{parameters_array_without_units(0)}; // Parámetro de corrección optimizado
+    auto const mu_0 = perm_t{parameters_array_without_units(1)}; // Permeavilidad del vacío optimizada
+
+    auto const rse = mag_ind_t{std::sqrt(rss_without_units/(data_vec.size() - 1))}; // Raiz cuadrada de la media de los residuos al cuadrado
+
+    //stdx::println("z_0 = {:%.2Q %q} | mu_0 = {} | RSE = {:%.2Q %q}", z_0, mu_0, rse);
+    stdx::println("Factor de corrección z_0 = {}", z_0);
+    stdx::println("Permeabilidad magnética mu_0 = {} | mu_0/(4 * pi * 10^-7)", mu_0, mu_0/(4 * std::numbers::pi * 1e-7));
+    stdx::println("RSE = {}", rse);
 }
