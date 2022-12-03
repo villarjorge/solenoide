@@ -62,7 +62,7 @@ auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t 
     // Por ahora estas constantes no se corresponden a la realidad
     auto const N = dimless_t{100.0}; // número de espiras, adimensional
     auto const I = curr_t{1.0}; // Corriente que pasa por el solenoide en Amperios
-    auto const L = len_t{70.0}; // Longitud del solenoide en milímetros
+    auto const L = len_t{50.0}; // Longitud del solenoide en milímetros
     auto const D = len_t{10.0}; // Diámetro del solenoide
     auto const R = D/2;
 
@@ -78,11 +78,7 @@ auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t 
 auto main() -> int {
     auto data_vec = get_data("../../magnetic_data_no_z_correction.csv") 
                     | stdx::ranges::to<std::vector<Data>>();
-    // Imprime los datos
-    //for (Data d : data_vec) {
-    //    stdx::println("position: {}, field: {}", d.position, d.magnetic_induction);
-    //}
-    
+
     // dlib ---------------------------------------------------------------------
 
     // tenemos dos parametros, por lo que necesitamos una matriz de 2 por 1
@@ -121,6 +117,6 @@ auto main() -> int {
 
     //stdx::println("z_0 = {:%.2Q %q} | mu_0 = {} | RSE = {:%.2Q %q}", z_0, mu_0, rse);
     stdx::println("Factor de corrección z_0 = {}", z_0);
-    stdx::println("Permeabilidad magnética mu_0 = {} | mu_0/(4 * pi * 10^-7)", mu_0, mu_0/(4 * std::numbers::pi * 1e-7));
+    stdx::println("Permeabilidad magnética mu_0 = {} | mu_0/(4 * pi * 10^-7) = {}", mu_0, mu_0/(4 * std::numbers::pi * 1e-7));
     stdx::println("RSE = {}", rse);
 }
