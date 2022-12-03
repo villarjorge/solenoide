@@ -33,7 +33,7 @@ using len_t = usi::length<usi::millimetre>; // Tipo de longitud en milimetros
 using curr_t = usi::electric_current<usi::ampere>; // Tipo de corriente en Amperios
 using mag_ind_t = usi::magnetic_induction<usi::millitesla>; // Tipo de intensidad del campo magnético en militeslas
 using perm_t = usi::permeability<usi::henry_per_metre>; // Tipo de permeabilidad del vacío en Henry · metro^(-1)
-using dimless_t = un::quantity<un::dim_one, un::one, float>;
+using dimless_t = un::quantity<un::dim_one, un::one, float>; // Tipo sin unidades
 
 struct Data {
     len_t position;
@@ -99,6 +99,7 @@ auto main() -> int {
 
     // Ejecutamos el método LM con los datos experimentales, optimizando el valor de z_0 y mu_0. 
     // El resultado obtenido multiplicado por 2 proporciona el RSS (suma de los residuos al cuadrado) medido implícitamente en Teslas^2:
+    // Ejemplo de uso de esta función: http://dlib.net/least_squares_ex.cpp.html
 
     auto rss_without_units = 2.0*dlib::solve_least_squares_lm(
         dlib::objective_delta_stop_strategy{1.0e-7}, // precisión
