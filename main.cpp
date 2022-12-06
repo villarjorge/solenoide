@@ -43,6 +43,17 @@ struct Data {
     mag_ind_t magnetic_induction;
 };
 
+
+    dimless_t  N ; // número de espiras, adimensional
+    curr_t  I ; // Corriente que pasa por el solenoide en Amperios
+    len_t  L ; // Longitud del solenoide en milímetros
+    len_t  D ;
+
+    /*auto  N = static_cast<dimless_t>(cN); // número de espiras, adimensional
+    auto  I = static_cast<curr_t>(cI); // Corriente que pasa por el solenoide en Amperios
+    auto  L = static_cast<len_t>(cL); // Longitud del solenoide en milímetros
+    auto  D = static_cast<len_t>(cD);*/
+
 auto get_data(std::string path) -> stdx::generator<Data> {
     auto ifs = std::ifstream{path, std::ios::binary};
     if (!ifs) throw std::ios::failure{"Unable to open the CSV file"};
@@ -63,10 +74,10 @@ auto get_data(std::string path) -> stdx::generator<Data> {
 auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t {
     // Inducción magnética en un solenoide, z + z_0 es la distancia al centro del solenoide
     // Por ahora estas constantes no se corresponden a la realidad
-    auto const N = dimless_t{100.0}; // número de espiras, adimensional
+    /*auto const N = dimless_t{100.0}; // número de espiras, adimensional
     auto const I = curr_t{1.0}; // Corriente que pasa por el solenoide en Amperios
     auto const L = len_t{50.0}; // Longitud del solenoide en milímetros
-    auto const D = len_t{10.0}; // Diámetro del solenoide
+    auto const D = len_t{10.0};*/ // Diámetro del solenoide
     auto const R = D/2;
 
     auto const a = z - z_0 + L/2;
@@ -83,10 +94,22 @@ std::string Path; // Aqui guardaremos el camino que el usuario escriba
 
 auto main() -> int {
 
+    std::cout<<"Insert number of loops of the solenoid: "; //Pedimos al usuario las diferentes constantes
+    std::cin>>N.number(); //Guardamos el valor numérico de lo introducido para usarlo a la hora de hacer funciones
 
-    std::cout<<"Insert the path of the CSV file (C:/Users/user_name/Desktop/file_name.csv): "; std::cin>>Path; // Preguntamos al usuario por el camino y lo guardamos en Path
+    std::cout<<"Insert intensity of the current: "; 
+    std::cin>>I.number();
+
+    std::cout<<"Insert lenght of the solenoid: "; 
+    std::cin>>L.number();
+
+    std::cout<<"Insert diametre of the solenoid: "; 
+    std::cin>>D.number();
+
+    std::cout<<"Insert the path of the CSV file (C:/Users/user_name/Desktop/file_name.csv): "; 
+    std::cin>>Path ; // Preguntamos al usuario por el camino y lo guardamos en Path
     my_input_file.open(Path, std::ios::in); //Abrimos el archivo
-    while( my_input_file.fail() ) // Si el archivo no esta en la ubicación que ha escrito el usuario
+    while( my_input_file.fail()) // Si el archivo no esta en la ubicación que ha escrito el usuario
 {
     my_input_file.clear(); // Borramos lo que se guardara en my_input_file al intentar abrirlo
     std::cout<<"Incorrect file path, Re-Enter "; // Volvemos a pedir que inserte el camino
