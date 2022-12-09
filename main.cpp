@@ -59,11 +59,10 @@ auto get_data(std::string path) -> stdx::generator<Data> {
 
 auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t {
     // Inducción magnética en un solenoide, z + z_0 es la distancia al centro del solenoide
-    // Por ahora estas constantes no se corresponden a la realidad
-    auto const N = dimless_t{100.0}; // número de espiras, adimensional
-    auto const I = curr_t{1.0}; // Corriente que pasa por el solenoide en Amperios
-    auto const L = len_t{50.0}; // Longitud del solenoide en milímetros
-    auto const D = len_t{10.0}; // Diámetro del solenoide
+    auto const N = dimless_t{200.0}; // número de espiras, adimensional
+    auto const I = curr_t{.9}; // Corriente que pasa por el solenoide en Amperios
+    auto const L = len_t{105.0}; // Longitud del solenoide en milímetros
+    auto const D = len_t{41.0}; // Diámetro del solenoide
     auto const R = D/2;
 
     auto const a = z - z_0 + L/2;
