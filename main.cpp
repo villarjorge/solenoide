@@ -119,4 +119,14 @@ auto main() -> int {
     stdx::println("Factor de corrección z_0 = {}", z_0);
     stdx::println("Permeabilidad magnética mu_0 = {} | mu_0/(4 * pi * 10^-7) = {}", mu_0, mu_0/(4 * std::numbers::pi * 1e-7));
     stdx::println("RSE = {}", rse);
+
+    auto tod = [](auto q)->double {return q.number();}; // Elimina las unidades de los valores por que matplot no trabaja con unidades
+    // Vector de Inducción magnética (sin unidades)
+    auto const p = data_vec | std::views::transform(&Data::magnetic_induction)
+                            | std::views::transform(tod) 
+                            | stdx::ranges::to<std::vector<double>>(); 
+    // Vector de posiciones (sin unidades)
+    auto const Z = data_vec | std::views::transform(&Data::position)
+                            | std::views::transform(tod)
+                            | stdx::ranges::to<std::vector<double>>();
 }
