@@ -11,9 +11,7 @@
 #include <cppexten/print>
 #include <cppexten/ranges>
 
-namespace stdx = std::experimental;
-
-// biblioteca de terceros:
+// bibliotecas de terceros:
 #include <boost/tokenizer.hpp> // tokenizador para extraer los valores en una línea del CSV
 #include <dlib/optimization.h> // contiene el método LM de regresión no-lineal
 
@@ -26,9 +24,15 @@ namespace stdx = std::experimental;
 #include <units/isq/si/magnetic_induction.h>
 #include <units/isq/si/permeability.h>
 
+#include <matplot/matplot.h>
+
+// Apodos para trabajar más cómodamente
+namespace stdx = std::experimental;
+namespace mp = matplot;
 namespace un = units;
 namespace usi = units::isq::si;
 
+//Definimos las unidades a usar en el código
 using len_t = usi::length<usi::millimetre>; // Tipo de longitud en milimetros
 using curr_t = usi::electric_current<usi::ampere>; // Tipo de corriente en Amperios
 using mag_ind_t = usi::magnetic_induction<usi::millitesla>; // Tipo de intensidad del campo magnético en militeslas
@@ -42,7 +46,7 @@ struct Data {
 
 auto get_data(std::string path) -> stdx::generator<Data> {
     auto ifs = std::ifstream{path, std::ios::binary};
-    if (!ifs) throw std::ios::failure{"unable to open the CSV file"};
+    if (!ifs) throw std::ios::failure{"Unable to open the CSV file"};
     
     auto ln = std::string{}; // string auxiliar para almacenar cada línea del CSV
     while (std::getline(ifs, ln)) { // procesamos cada línea del CSV
@@ -75,8 +79,7 @@ auto theoretic_magnetic_induction(len_t z, len_t z_0, perm_t mu_0) -> mag_ind_t 
 }
 
 auto main() -> int {
-    auto data_vec = get_data("../../magnetic_data_no_z_correction.csv") 
-                    | stdx::ranges::to<std::vector<Data>>();
+    auto data_vec = get_data("../../magnetic_data_no_z_correction.csv") | stdx::ranges::to<std::vector<Data>>();
 
     // dlib ---------------------------------------------------------------------
 
@@ -111,22 +114,50 @@ auto main() -> int {
     // dlib ---------------------------------------------------------------------
 
     auto const z_0 = len_t{parameters_array_without_units(0)}; // Parámetro de corrección optimizado
-    auto const mu_0 = perm_t{parameters_array_without_units(1)}; // Permeavilidad del vacío optimizada
+    auto const mu_0 = perm_t{parameters_array_without_units(1)}; // Permeabilidad del vacío optimizada
 
     auto const rse = mag_ind_t{std::sqrt(rss_without_units/(data_vec.size() - 1))}; // Raiz cuadrada de la media de los residuos al cuadrado
 
     //stdx::println("z_0 = {:%.2Q %q} | mu_0 = {} | RSE = {:%.2Q %q}", z_0, mu_0, rse);
-    stdx::println("Factor de corrección z_0 = {}", z_0);
-    stdx::println("Permeabilidad magnética mu_0 = {} | mu_0/(4 * pi * 10^-7) = {}", mu_0, mu_0/(4 * std::numbers::pi * 1e-7));
-    stdx::println("RSE = {}", rse);
+    stdx::println("- Factor de corrección     z_0  = {}", z_0);
+    stdx::println("- Permeabilidad magnética  mu_0 = {} | mu_0/(4 * pi * 10^-7) = {}", mu_0, mu_0/(4 * std::numbers::pi * 1e-7));
+    stdx::println("- RSE = {}", rse);
 
-    auto tod = [](auto q)->double {return q.number();}; // Elimina las unidades de los valores por que matplot no trabaja con unidades
-    // Vector de Inducción magnética (sin unidades)
-    auto const p = data_vec | std::views::transform(&Data::magnetic_induction)
-                            | std::views::transform(tod) 
-                            | stdx::ranges::to<std::vector<double>>(); 
-    // Vector de posiciones (sin unidades)
-    auto const Z = data_vec | std::views::transform(&Data::position)
-                            | std::views::transform(tod)
-                            | stdx::ranges::to<std::vector<double>>();
+
+    // matplot ------------------------------------------------------------------
+
+    // vector de posiciones experimentale (sin unidades):
+    auto p = std::vector<double>{};
+    for (Data const& dt : data_vec) {
+        p.push_back(dt.position.number());
+    }
+
+    // vector de inducciones magnéticas experimentales (sin unidades):
+    auto ind_m = std::vector<double>{};
+    for (Data const& dt : data_vec) {
+        ind_m.push_back(dt.magnetic_induction.number());
+    }
+
+    // iteradores que apuntan a los valores mín y máx en el vector p:
+    auto [pmin, pmax] = std::ranges::minmax_element(p);
+    
+    mp::gcf()->quiet_mode(mp::on);
+    mp::xlabel("Posición [mm]");
+    mp::ylabel("Inducción Magnética [mT]");
+    mp::title("Campo magnético en el interior de un solenoide");
+
+    
+    auto f = [&](double pos) -> double {
+        return theoretic_magnetic_induction(len_t{pos}, z_0, mu_0).number();
+    };
+
+    mp::fplot(f, std::array<double, 2>{*pmin, *pmax})->color("k").line_width(2);
+
+    mp::hold(mp::on);
+    mp::scatter(p,ind_m) -> color("k");
+
+    mp::legend({"Ajuste teórico","Datos experimentales"}) -> mp::legend::font_size(9);
+
+    mp::show();
+
 }
